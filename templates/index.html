@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Inicio{% endblock %}
+
+{% block contenido %}
+
+<!-- Carousel -->
+<div id="carouselExample" class="carousel slide" data-bs-ride="carousel" data-bs-interval="2000">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="{{ url_for('static', filename='imagen1.jpg') }}" class="d-block w-100" alt="...">
+    </div>
+    <div class="carousel-item">
+      <img src="{{ url_for('static', filename='imagen2.jpg') }}" class="d-block w-100" alt="...">
+    </div>
+    <div class="carousel-item">
+      <img src="{{ url_for('static', filename='imagen3.jpg') }}" class="d-block w-100" alt="...">
+    </div>
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+    <span class="visually-hidden">Anterior</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+    <span class="visually-hidden">Siguiente</span>
+  </button>
+</div>
+
+<!-- Información -->
+<div class="container mt-5">
+  <h2 class="text-center mb-4">INFORMACIÓN</h2>
+  <div class="row">
+
+    <div class="col-sm-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Tarjeta Gráfica</h5>
+          <p class="card-text">Una tarjeta gráfica es un componente de hardware que procesa y
+             genera los datos necesarios para mostrar imágenes, videos y animaciones en el monitor de un ordenador.
+              También conocida como tarjeta de video o acelerador gráfico, su principal función es transformar
+               la información del procesador (CPU) en imágenes visualmente comprensibles. Es esencial para juegos, diseño, edición
+                de video y otras aplicaciones que requieren alta calidad de imagen y rendimiento.</p>
+          <p class="card-text">Este componente es crucial para los entusiastas de los videojuegos y los profesionales del diseño gráfico.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Placa Madre</h5>
+          <p class="card-text">La placa madre es el componente principal de un ordenador, donde se conectan todos los demás
+            dispositivos y tarjetas de expansión. Actúa como el centro de comunicación entre la CPU, la memoria RAM, la
+            tarjeta gráfica y otros periféricos. Es esencial para el funcionamiento del sistema, ya que permite la
+            transferencia de datos y energía entre los diferentes componentes.</p>
+          <p class="card-text">Una buena placa madre es crucial para garantizar la estabilidad y el rendimiento del
+            ordenador, especialmente en configuraciones de alto rendimiento para juegos o tareas de diseño gráfico.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Case</h5>
+          <p class="card-text">El case, o chasis, es la estructura que alberga todos los componentes de un ordenador. 
+            Su función principal es proteger y organizar el hardware, asegurando una buena ventilación y facilitando 
+            el acceso a los componentes internos. Existen diferentes tipos de cases, desde torres grandes que permiten 
+            una amplia expansión, hasta modelos compactos diseñados para ahorrar espacio.</p>
+          <p class="card-text">La elección del case adecuado es importante para garantizar una buena refrigeración y
+            facilitar futuras actualizaciones de hardware.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Servicios -->
+<div class="container mt-5">
+  <h2 class="text-center mb-4">SERVICIOS</h2>
+  <div class="row">
+    <div class="col-sm-4">
+      <div class="card h-100 shadow-sm">
+        <img src="{{ url_for('static', filename='MemoriaRam.jpeg') }}" class="card-img-top" alt="Web">
+        <div class="card-body">
+          <h5 class="card-title">Memoria Ram</h5>
+          <p class="card-text">La memoria RAM (Random Access Memory) es un componente esencial en cualquier ordenador, 
+            ya que permite el almacenamiento temporal de datos y programas en uso. Cuanta más memoria RAM tenga un sistema, 
+            más tareas podrá realizar simultáneamente sin afectar el rendimiento. Es crucial para aplicaciones que requieren 
+            un alto rendimiento, como juegos, edición de video y diseño gráfico.</p>
+          <a href="#" class="btn btn-primary">Ver más</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card h-100 shadow-sm">
+        <img src="{{ url_for('static', filename='SSD.jpg') }}" class="card-img-top" alt="Productos">
+        <div class="card-body">
+          <h5 class="card-title">Disco de Estado Solido (SSD)</h5>
+          <p class="card-text">Los discos de estado sólido (SSD) son una alternativa moderna a los discos duros tradicionales 
+            (HDD). Utilizan memoria flash para almacenar datos, lo que permite un acceso más rápido y tiempos de carga reducidos. 
+            Los SSD son ideales para sistemas operativos, aplicaciones y juegos, ya que mejoran significativamente el rendimiento 
+            general del sistema.</p>
+          <a href="#" class="btn btn-primary">Ver más</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card h-100 shadow-sm">
+        <img src="{{ url_for('static', filename='Fuente.jpg') }}" class="card-img-top" alt="Cursos">
+        <div class="card-body">
+          <h5 class="card-title">Fuente de alimentacion</h5>
+          <p class="card-text">La fuente de alimentación es un componente crítico en cualquier ordenador, ya que se encarga de
+            suministrar energía eléctrica a todos los demás componentes. Existen diferentes tipos de fuentes de alimentación,
+            incluyendo modelos con certificación 80 PLUS que garantizan una mayor eficiencia energética. Al elegir una fuente
+            de alimentación, es importante considerar la potencia necesaria para el sistema y la calidad del fabricante.</p>
+          <a href="#" class="btn btn-primary">Ver más</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
