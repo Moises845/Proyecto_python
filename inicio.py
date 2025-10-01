@@ -9,6 +9,7 @@ app.secret_key = 'appsecretkey'
 
 mysql = MySQL()
 
+
 # Conexion a la DB
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_PORT'] = 3306
