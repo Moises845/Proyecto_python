@@ -1,13 +1,15 @@
 from flask import Flask, render_template, request, url_for, redirect, session, flash
 from flask_mysqldb import MySQL
+import os
+import uuid
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-
 app.secret_key = 'appsecretkey'
 
 mysql = MySQL()
 
-#Conexion a la DB
+# Conexion a la DB
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_PORT'] = 3306
 app.config['MYSQL_USER'] = 'root'
@@ -15,16 +17,25 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'ventas'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-# Inicializar la extensión MySQL
+# Configuración para subir archivos
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB máximo
+
+# Crear directorio de uploads si no existe
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 mysql.init_app(app)
 
-#configuracion de la aplicacion
+# ----------------- RUTAS PRINCIPALES -----------------
 
-@app.route('/')  # Decorador para la ruta principal
+@app.route('/')
 def inicio():
     return render_template('index.html')
-
-
 
 @app.route('/accesologin', methods=['GET', 'POST']) 
 def accesologin():
@@ -32,35 +43,28 @@ def accesologin():
         email = request.form['email']
         password = request.form['password']
         
-        #conexion a la tabla usuario
         cursor = mysql.connection.cursor()
         cursor.execute("SELECT * FROM usuario WHERE email = %s AND password = %s", (email, password))
         user = cursor.fetchone()
-        #cursor.close()
 
         if user:
             session['logueado'] = True
             session['id'] = user['id']
             session['nombre'] = user['nombre']
             session['id_rol'] = user['id_rol']
+            session['email'] = user['email']
+            session['foto_perfil'] = user.get('foto_perfil', 'img/user.png')
             
             if user['id_rol'] == 1:
                 flash('Bienvenido administrador', 'success')
-                return render_template('admin.html', usuario=user)
+                return redirect(url_for('admin'))
             elif user['id_rol'] == 2:
-                
-                return render_template('usuario.html', usuario=user)
+                return redirect(url_for('usuario'))
         else:
             flash('Usuario o contraseña incorrecta', 'danger')
             return render_template('login.html')
-            """if user['id_rol'] == 1:
-                return render_template('admin.html')
-            elif user['id_rol'] == 2:
-                return render_template('usuario.html')"""
     else: 
         return render_template('login.html')
-    
-#-------------------Registro------------------#
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -68,7 +72,7 @@ def registro():
         nombre = request.form.get('nombre')
         email = request.form.get('email')
         password = request.form.get('password')
-        id_rol = 2  # Rol usuario por defecto
+        id_rol = 2
 
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO usuario (email, nombre, password, id_rol) VALUES (%s, %s, %s, %s)",
@@ -76,155 +80,252 @@ def registro():
         mysql.connection.commit()
         cur.close()
 
-        return redirect(url_for('inicio'))
-
+        flash('Registro exitoso. Ahora puedes iniciar sesión.', 'success')
+        return redirect(url_for('login'))
     return render_template("Registro.html")
 
-# ----------------- LISTAR TODOS LOS PRODUCTOS -----------------
-@app.route('/listar_productos')
-def listar_productos():
-    if 'usuario' in session:
+# ----------------- RUTAS DE USUARIOS -----------------
+
+@app.route('/listar')
+def listar(): 
+    if 'logueado' in session and session.get('id_rol') == 1:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM productos ORDER BY id DESC")
-        productos = cur.fetchall()
+        cur.execute("SELECT * FROM usuario")
+        usuarios = cur.fetchall()
         cur.close()
-        return render_template("listar_productos.html", usuario=session['usuario'], productos=productos)
+        return render_template("listar.html", usuarios=usuarios)
     else:
+        flash("Acceso no autorizado", "error")
         return redirect(url_for('login'))
-    
-    
-@app.route('/agregar_producto', methods=['GET', 'POST'])
-def agregar_producto():
+
+@app.route('/guardar', methods=['POST'])
+def guardar():
     if request.method == 'POST':
         nombre = request.form['nombre']
-        precio = float(request.form['precio'])
-        descripcion = request.form['descripcion']
-
-        # Insertar en MySQL
+        email = request.form['email']
+        password = request.form['password']
+        id_rol = 2
+        
         cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO productos (nombre, precio, descripcion)
-            VALUES (%s, %s, %s)
-        """, (nombre, precio, descripcion))
+        cur.execute("INSERT INTO usuario (nombre, email, password, id_rol) VALUES (%s, %s, %s, %s)", 
+                   (nombre, email, password, id_rol))
         mysql.connection.commit()
         cur.close()
+        
+        flash('Usuario agregado correctamente', 'success')
+        return redirect(url_for('listar'))
 
-        flash('Producto agregado correctamente!', 'success')
-        return redirect(url_for('agregar_producto'))
+@app.route('/updateUsuario', methods=['POST'])
+def updateUsuario():
+    if request.method == 'POST':
+        id = request.form['id']
+        nombre = request.form['nombre']
+        email = request.form['email']
+        password = request.form['password']
+        
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE usuario 
+            SET nombre = %s, email = %s, password = %s 
+            WHERE id = %s
+        """, (nombre, email, password, id))
+        mysql.connection.commit()
+        cur.close()
+        
+        flash('Usuario actualizado correctamente', 'success')
+        return redirect(url_for('listar'))
 
-    # Obtener productos para mostrar en la tabla (DictCursor)
-    cur = mysql.connection.cursor(MySQL.cursors.DictCursor)
+@app.route('/borrarUser/<string:id>')
+def borrarUser(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM usuario WHERE id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+    
+    flash('Usuario eliminado correctamente', 'success')
+    return redirect(url_for('listar'))
+
+# ----------------- RUTAS DE PRODUCTOS -----------------
+
+@app.route('/listar_productos_agregados', methods=['GET', 'POST'])
+def listar_productos_agregados():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        precio = request.form['precio']
+        descripcion = request.form['descripcion']
+        
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO productos (Nombre, Precio, Descripcion) VALUES (%s, %s, %s)", 
+                   (nombre, precio, descripcion))
+        mysql.connection.commit()
+        cur.close()
+        
+        flash('Producto agregado correctamente', 'success')
+        return redirect(url_for('listar_productos'))
+    
+    return render_template("agregar_productos.html")
+
+@app.route('/listar_productos')
+def listar_productos():
+    cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM productos ORDER BY id DESC")
     productos = cur.fetchall()
     cur.close()
+    return render_template("listar_productos.html", productos=productos)
 
-    return render_template('Agregar_productos.html', productos=productos)
-
-# ----------------- RUTA PARA EDITAR PRODUCTO -----------------
 @app.route('/editar_producto/<int:id>', methods=['POST'])
 def editar_producto(id):
-    cur = mysql.connection.cursor()
-    # Obtener el producto por ID para validar que exista
-    cur.execute("SELECT * FROM productos WHERE id = %s", (id,))
-    producto = cur.fetchone()
-
-    if not producto:
-        flash("Producto no encontrado", "warning")
-        cur.close()
-        return redirect(url_for('listar_productos'))
-
-    # Revisar si la acción es eliminar
-    accion = request.form.get('accion')
-    if accion == 'eliminar':
-        cur.execute("DELETE FROM productos WHERE id = %s", (id,))
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        precio = request.form['precio']
+        descripcion = request.form['descripcion']
+        
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE productos 
+            SET Nombre = %s, Precio = %s, Descripcion = %s 
+            WHERE id = %s
+        """, (nombre, precio, descripcion, id))
         mysql.connection.commit()
         cur.close()
-        flash("Producto eliminado correctamente!", "success")
+        
+        flash('Producto actualizado correctamente', 'success')
         return redirect(url_for('listar_productos'))
 
-    # Si no es eliminar, se asume que es actualizar
-    nombre = request.form['nombre']
-    precio = float(request.form['precio'])
-    descripcion = request.form['descripcion']
-
-    # Actualizar producto en la base de datos
-    cur.execute("""
-        UPDATE productos
-        SET nombre=%s, precio=%s, descripcion=%s
-        WHERE id=%s
-    """, (nombre, precio, descripcion, id))
+@app.route('/borrar_producto/<string:id>')
+def borrar_producto(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM productos WHERE id = %s", (id,))
     mysql.connection.commit()
     cur.close()
-
-    flash("Producto actualizado correctamente!", "success")
+    
+    flash('Producto eliminado correctamente', 'success')
     return redirect(url_for('listar_productos'))
 
-#  ----------------- PERFIL DE USUARIO # -----------------
-@app.route('/listar', methods=['GET', 'POST'])
-def listar():
-    if 'usuario' not in session:
+# ----------------- RUTAS DE PERFIL -----------------
+
+@app.route('/perfil')
+def perfil():
+    if 'logueado' in session:
+        # Obtener información actualizada del usuario
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT nombre, email, foto_perfil FROM usuario WHERE id = %s", (session['id'],))
+        user = cur.fetchone()
+        cur.close()
+        
+        if user:
+            session['nombre'] = user['nombre']
+            session['email'] = user['email']
+            session['foto_perfil'] = user['foto_perfil'] if user['foto_perfil'] else 'img/user.png'
+        
+        return render_template("perfil.html")
+    else:
+        flash("Debe iniciar sesión para ver el perfil", "error")
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
+@app.route('/cambiar_foto_perfil', methods=['POST'])
+def cambiar_foto_perfil():
+    if 'logueado' in session:
+        user_id = session['id']
+        foto_path = None
+        
+        # Verificar si se subió un archivo
+        if 'foto' in request.files and request.files['foto'].filename != '':
+            file = request.files['foto']
+            if file and allowed_file(file.filename):
+                # Generar nombre único para el archivo
+                filename = secure_filename(file.filename)
+                unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(file_path)
+                foto_path = f"uploads/{unique_filename}"
+        
+        # Verificar si se seleccionó una foto predefinida
+        elif 'foto_predefinida' in request.form:
+            foto_path = request.form['foto_predefinida']
+        
+        if foto_path:
+            # Actualizar en la base de datos
+            cur = mysql.connection.cursor()
+            cur.execute("UPDATE usuario SET foto_perfil = %s WHERE id = %s", 
+                       (foto_path, user_id))
+            mysql.connection.commit()
+            cur.close()
+            
+            # Actualizar sesión
+            session['foto_perfil'] = foto_path
+            flash('Foto de perfil actualizada correctamente', 'success')
+        else:
+            flash('No se seleccionó ninguna imagen', 'error')
+        
+        return redirect(url_for('perfil'))
+    else:
+        flash("Debe iniciar sesión", "error")
+        return redirect(url_for('login'))
 
-    # ----------------- AGREGAR USUARIO -----------------
-    if request.method == 'POST' and 'agregar_usuario' in request.form:
+@app.route('/actualizar_perfil', methods=['POST'])
+def actualizar_perfil():
+    if 'logueado' in session:
         nombre = request.form['nombre']
         email = request.form['email']
-        password = request.form['password']
-        id_rol = 2  # Rol por defecto
-
-        cur.execute("INSERT INTO usuario (nombre, email, password, id_rol) VALUES (%s, %s, %s, %s)",
-                    (nombre, email, password, id_rol))
+        user_id = session['id']
+        
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE usuario SET nombre = %s, email = %s WHERE id = %s", 
+                   (nombre, email, user_id))
         mysql.connection.commit()
         cur.close()
-        flash("Usuario agregado correctamente!", "success")
-        return redirect(url_for('listar'))  # <-- redirige después del POST
+        
+        # Actualizar la sesión
+        session['nombre'] = nombre
+        session['email'] = email
+        
+        flash('Perfil actualizado correctamente', 'success')
+        return redirect(url_for('perfil'))
+    else:
+        flash("Debe iniciar sesión", "error")
+        return redirect(url_for('login'))
 
-    # ----------------- EDITAR USUARIO -----------------
-    elif request.method == 'POST' and 'editar_usuario' in request.form:
-        user_id = request.form['id']
-        nombre = request.form['nombre']
-        email = request.form['email']
-        password = request.form['password']
+@app.route('/cambiar_password', methods=['POST'])
+def cambiar_password():
+    if 'logueado' in session:
+        password_actual = request.form['password_actual']
+        nueva_password = request.form['nueva_password']
+        confirmar_password = request.form['confirmar_password']
+        user_id = session['id']
+        
+        # Verificar contraseña actual
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT password FROM usuario WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        
+        if user and user['password'] == password_actual:
+            if nueva_password == confirmar_password:
+                cur.execute("UPDATE usuario SET password = %s WHERE id = %s", 
+                           (nueva_password, user_id))
+                mysql.connection.commit()
+                cur.close()
+                flash('Contraseña cambiada correctamente', 'success')
+            else:
+                flash('Las contraseñas nuevas no coinciden', 'error')
+        else:
+            flash('Contraseña actual incorrecta', 'error')
+        
+        return redirect(url_for('perfil'))
+    else:
+        flash("Debe iniciar sesión", "error")
+        return redirect(url_for('login'))
 
-        cur.execute("UPDATE usuario SET nombre=%s, email=%s, password=%s WHERE id=%s",
-                    (nombre, email, password, user_id))
-        mysql.connection.commit()
-        cur.close()
-        flash("Usuario actualizado correctamente!", "success")
-        return redirect(url_for('listar'))  # <-- redirige después del POST
-
-    # ----------------- ELIMINAR USUARIO -----------------
-    if request.args.get('eliminar_usuario'):
-        user_id = request.args.get('eliminar_usuario')
-        cur.execute("DELETE FROM usuario WHERE id = %s", (user_id,))
-        mysql.connection.commit()
-        cur.close()
-        flash("Usuario eliminado correctamente!", "danger")
-        return redirect(url_for('listar'))  # <-- redirige después de eliminar
-
-    # ----------------- OBTENER USUARIOS -----------------
-    cur.execute("SELECT * FROM usuario")
-    usuarios = cur.fetchall()
-    cur.close()
-
-    return render_template("editar_usuario.html",
-                           usuario=session['usuario'],
-                           usuarios=usuarios)
+# ----------------- RUTAS EXISTENTES -----------------
 
 @app.route('/logout')
 def logout():
-    session.clear()  # Elimina todos los datos de la sesión
+    session.clear()
     flash("Has cerrado sesión correctamente", "success")
     return redirect(url_for('login'))
 
-
-# ----------------- PERFIL DE USUARIO-----------------
-
 @app.route('/contacto', methods=['GET', 'POST'])
 def contacto():
-
     user = {
         'nombre': '',
         'email': '',
@@ -236,10 +337,9 @@ def contacto():
         user['email'] = request.args.get('email', '')
         user['mensaje'] = request.args.get('mensaje', '')
     return render_template("contacto.html", usuario=user)
-    
+
 @app.route('/contactopost', methods=['GET', 'POST'])
 def contactopost():
-
     user = {
         'nombre': '',
         'email': '',
@@ -258,16 +358,16 @@ def login():
 
 @app.route('/admin')
 def admin():
-    if 'usuario' in session and session.get('id_rol') == 1:
-        return render_template("admin.html", usuario=session['usuario'])
+    if 'logueado' in session and session.get('id_rol') == 1:
+        return render_template("admin.html", usuario=session['nombre'])
     else:
         flash("Acceso no autorizado", "error")
         return redirect(url_for('login'))
 
 @app.route('/usuario')
 def usuario():
-    if 'usuario' in session:
-        return render_template('usuario.html', usuario=session['usuario'])
+    if 'logueado' in session:
+        return render_template('usuario.html', usuario=session['nombre'])
     else:
         return redirect(url_for('login'))
 
@@ -276,4 +376,4 @@ def acercade():
     return render_template("acercade.html")
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000) #ejecuta la aplicacion en modo de depuracion
+    app.run(debug=True, port=8000)

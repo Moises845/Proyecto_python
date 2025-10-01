@@ -72,6 +72,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Corregir los enlaces de productos: -->
             <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card" style="background: linear-gradient(180deg, #042bf1,#367cd9,#ffffff);">
                     <div class="row g-0">
@@ -79,21 +80,21 @@
                             <div class="card-body">
                                 <div class="card-body text-white">
                                     <h5 class="card-title">Registrar Productos</h5>
-                                    <!-- <p class="card-text">Agregar los productos al sistema</p> -->
-                                    <a href="{{ url_for('listar_productos') }}"
+                                    <a href="{{ url_for('listar_productos_agregados') }}"
                                         class="btn btn-outline-success">Ver
                                         Detalles</a>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 align-content-center">
-                            <a href="{{ url_for('listar_productos') }}">
-                                <img src="{{ url_for('static', filename='agregarp.png') }}"
+                            <a href="{{ url_for('listar_productos_agregados') }}">
+                                <img src="{{ url_for('static', filename='img/agregarp.png') }}"
                                     class="img-fluid rounded-start" alt="..."></a>
                         </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card" style="background: linear-gradient(180deg, #0b235c,#3d85a9,#e0f7ff);">
                     <div class="row g-0">
@@ -101,15 +102,13 @@
                             <div class="card-body">
                                 <div class="card-body text-white">
                                     <h5 class="card-title">Visualizar Productos</h5>
-                                    <!-- <p class="card-text">Muestra lista de productos</p> -->
                                     <a href="{{ url_for('listar_productos') }}" class="btn btn-outline-success">Ver
                                         Detalles</a>
                                 </div>
-
                             </div>
                         </div>
                         <div class="col-md-4 align-content-center">
-                            <img src="{{ url_for('static', filename='listarp.png') }}"
+                            <img src="{{ url_for('static', filename='img/listarp.png') }}"
                                 class="img-fluid rounded-start" alt="...">
                         </div>
                     </div>

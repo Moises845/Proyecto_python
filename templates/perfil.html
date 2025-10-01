@@ -1,0 +1,355 @@
+{% extends 'baseadmin.html' %}
+
+{% block title %}Perfil de Usuario{% endblock %}
+
+{% block body %}
+<!--MENSAJE DE ALERTA SweetAlert2-->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<ul class=flashes>
+    {% for category, message in messages %}
+    <script type="text/javascript">
+        const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+        Toast.fire({
+            icon: "success",
+            title: "{{message}}"
+        });
+    </script>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+<div class="container p-5 mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Card Principal del Perfil -->
+            <div class="card shadow-lg border-0">
+                <!-- Header de la Card -->
+                <div class="card-header text-center py-4"
+                    style="background: linear-gradient(220deg, #ffffff,#7a9f7a,#355e3b);">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 position-relative">
+                            <!-- Imagen de perfil editable -->
+                            <div class="position-relative d-inline-block">
+                                <img id="fotoPerfil"
+                                    src="{{ url_for('static', filename=session.get('foto_perfil', 'img/user.png')) }}"
+                                    class="img-fluid rounded-circle shadow" alt="Foto de perfil"
+                                    style="width: 120px; height: 120px; object-fit: cover; border: 4px solid white;">
+                                <!-- Botón para cambiar foto -->
+                                <button type="button"
+                                    class="btn btn-primary btn-sm position-absolute bottom-0 end-0 rounded-circle"
+                                    data-bs-toggle="modal" data-bs-target="#modalCambiarFoto"
+                                    style="width: 35px; height: 35px; padding: 0;">
+                                    <i class="bi bi-camera"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h2 class="text-white mb-1">{{ session['nombre'] if session['nombre'] else 'Usuario' }}</h2>
+                            <p class="text-light mb-0">
+                                {% if session['id_rol'] == 1 %}
+                                <span class="badge bg-danger">Administrador</span>
+                                {% else %}
+                                <span class="badge bg-primary">Usuario</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body de la Card -->
+                <div class="card-body p-5">
+                    <!-- Información del Usuario -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-success mb-3">
+                                <i class="bi bi-person-circle"></i> Información Personal
+                            </h5>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nombre Completo:</label>
+                                <p class="form-control bg-light">{{ session['nombre'] if session['nombre'] else 'No
+                                    disponible' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">ID de Usuario:</label>
+                                <p class="form-control bg-light">{{ session['id'] if session['id'] else 'No disponible'
+                                    }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="text-success mb-3">
+                                <i class="bi bi-shield-lock"></i> Información de Cuenta
+                            </h5>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Rol:</label>
+                                <p class="form-control bg-light">
+                                    {% if session['id_rol'] == 1 %}
+                                    Administrador
+                                    {% elif session['id_rol'] == 2 %}
+                                    Usuario
+                                    {% else %}
+                                    No definido
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email:</label>
+                                <p class="form-control bg-light">{{ session.get('email', 'No disponible') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button class="btn btn-warning me-md-2" data-bs-toggle="modal"
+                                    data-bs-target="#modalEditarPerfil">
+                                    <i class="bi bi-pencil-square"></i> Editar Perfil
+                                </button>
+                                <button class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#modalCambiarPassword">
+                                    <i class="bi bi-key"></i> Cambiar Contraseña
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cambiar Foto de Perfil -->
+<div class="modal fade" id="modalCambiarFoto" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(220deg, #ffffff,#7a9f7a,#355e3b);">
+                <h5 class="modal-title text-white">
+                    <i class="bi bi-camera"></i> Cambiar Foto de Perfil
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('cambiar_foto_perfil') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body text-center">
+                    <!-- Vista previa de la imagen -->
+                    <div class="mb-3">
+                        <img id="vistaPrevia"
+                            src="{{ url_for('static', filename=session.get('foto_perfil', 'img/user.png')) }}"
+                            class="img-fluid rounded-circle shadow mb-3" alt="Vista previa"
+                            style="width: 150px; height: 150px; object-fit: cover;">
+                    </div>
+
+                    <!-- Selección de archivo -->
+                    <div class="mb-3">
+                        <label for="foto" class="form-label fw-bold">Seleccionar nueva imagen:</label>
+                        <input type="file" class="form-control" id="foto" name="foto" accept="image/*" required>
+                        <div class="form-text">
+                            Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB
+                        </div>
+                    </div>
+
+                    <!-- Opciones de imagen predefinidas -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">O selecciona una imagen predefinida:</label>
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="foto_predefinida" value="img/user.png"
+                                    id="foto1" autocomplete="off">
+                                <label class="btn btn-outline-success w-100" for="foto1">
+                                    <img src="{{ url_for('static', filename='img/user.png') }}"
+                                        class="img-fluid rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                </label>
+                            </div>
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="foto_predefinida" value="img/user2.png"
+                                    id="foto2" autocomplete="off">
+                                <label class="btn btn-outline-success w-100" for="foto2">
+                                    <img src="{{ url_for('static', filename='img/user2.png') }}"
+                                        class="img-fluid rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                </label>
+                            </div>
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="foto_predefinida" value="img/user3.png"
+                                    id="foto3" autocomplete="off">
+                                <label class="btn btn-outline-success w-100" for="foto3">
+                                    <img src="{{ url_for('static', filename='img/user3.png') }}"
+                                        class="img-fluid rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                </label>
+                            </div>
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="foto_predefinida" value="img/user4.png"
+                                    id="foto4" autocomplete="off">
+                                <label class="btn btn-outline-success w-100" for="foto4">
+                                    <img src="{{ url_for('static', filename='img/user4.png') }}"
+                                        class="img-fluid rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cambiar Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Perfil -->
+<div class="modal fade" id="modalEditarPerfil" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(220deg, #ffffff,#7a9f7a,#355e3b);">
+                <h5 class="modal-title text-white">
+                    <i class="bi bi-pencil-square"></i> Editar Perfil
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('actualizar_perfil') }}" method="POST">
+                <div class="modal-body">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" name="nombre"
+                            value="{{ session['nombre'] if session['nombre'] else '' }}" required>
+                        <label>Nombre Completo</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" name="email" value="{{ session.get('email', '') }}"
+                            required>
+                        <label>Correo Electrónico</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cambiar Contraseña -->
+<div class="modal fade" id="modalCambiarPassword" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(220deg, #ffffff,#7a9f7a,#355e3b);">
+                <h5 class="modal-title text-white">
+                    <i class="bi bi-key"></i> Cambiar Contraseña
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('cambiar_password') }}" method="POST">
+                <div class="modal-body">
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" name="password_actual"
+                            placeholder="Contraseña actual" required>
+                        <label>Contraseña Actual</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" name="nueva_password" placeholder="Nueva contraseña"
+                            required>
+                        <label>Nueva Contraseña</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" name="confirmar_password"
+                            placeholder="Confirmar contraseña" required>
+                        <label>Confirmar Nueva Contraseña</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script para vista previa de imagen -->
+<!-- Script para vista previa de imagen -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputFoto = document.getElementById('foto');
+        const vistaPrevia = document.getElementById('vistaPrevia');
+        const fotoPerfil = document.getElementById('fotoPerfil');
+
+        // Vista previa cuando se selecciona un archivo
+        inputFoto.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    vistaPrevia.src = e.target.result;
+                    // Deseleccionar fotos predefinidas
+                    document.querySelectorAll('input[name="foto_predefinida"]').forEach(radio => {
+                        radio.checked = false;
+                    });
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Cambiar vista previa cuando se selecciona foto predefinida
+        document.querySelectorAll('input[name="foto_predefinida"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (this.checked) {
+                    vistaPrevia.src = "{{ url_for('static', filename='') }}" + this.value;
+                    inputFoto.value = ''; // Limpiar input file
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Este script debe estar separado para que Jinja2 funcione correctamente -->
+{% if session.get('foto_perfil') %}
+<script>
+    // Actualizar la foto de perfil principal si existe en la sesión
+    document.addEventListener('DOMContentLoaded', function () {
+        const fotoPerfil = document.getElementById('fotoPerfil');
+        if (fotoPerfil) {
+            fotoPerfil.src = "{{ url_for('static', filename=session['foto_perfil']) }}";
+        }
+    });
+</script>
+{% endif %}
+
+<style>
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        border-bottom: none;
+    }
+
+    .btn-check:checked+.btn-outline-success {
+        background-color: #198754;
+        border-color: #198754;
+        color: white;
+    }
+
+    .position-relative .btn {
+        transform: translate(25%, 25%);
+    }
+
+    .form-control[readonly] {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

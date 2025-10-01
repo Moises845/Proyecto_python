@@ -43,19 +43,20 @@ icons.min.css">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('admin') }}">Inicio</a>
                         </li>
+                        <!-- En la sección de productos del navbar, corregir: -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 Productos
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('listar_productos') }}">Agregar</a></li>
+                                <li><a class="dropdown-item"
+                                        href="{{ url_for('listar_productos_agregados') }}">Agregar</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('listar_productos') }}">Listar</a></li>
-                                <li><a class="dropdown-item" href="#"></a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('listar') }}">Perfil</a>
+                            <a class="nav-link" href="{{ url_for('perfil') }}">Perfil</a>
                         </li>
                     </ul>
                     <!-- Mostrar nombre de usuario registrado -->
@@ -78,7 +79,7 @@ icons.min.css">
     <footer>
         <hr>
         <div class="container bg-light">
-            <p class="text-center">Copyright © 2025 - UNAN Managua</p>
+            <p class="text-center">Copyright © 2025 - Tech-505</p>
         </div>
     </footer>
     <!-- Bootstrap JavaScript Libraries -->
