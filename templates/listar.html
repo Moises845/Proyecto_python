@@ -75,7 +75,7 @@
             <tbody>
                 {% for mostrar in usuarios %}
                 <tr>
-                    <td class="text-center">{{ mostrar.id }}</td>
+                    <td class="text-center">{{ loop.index }}</td>
                     <td>{{ mostrar.nombre }}</td>
                     <td>{{ mostrar.email }}</td>
                     <td class="text-center">{{ mostrar.password }}</td>
@@ -83,13 +83,13 @@
                         <!-- Botones de acciones -->
                         <div class="btn-group" role="group">
                             <!-- Botón Editar -->
-                            <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" 
-                                    data-bs-target="#modaledit{{mostrar.id}}">
+                            <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modaledit{{mostrar.id}}">
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
                             <!-- Botón Eliminar -->
-                            <button class="btn btn-outline-danger btn-sm" 
-                                    onclick="confirmarEliminacion('/borrarUser/{{mostrar.id}}')">
+                            <button class="btn btn-outline-danger btn-sm"
+                                onclick="confirmarEliminacion('/borrarUser/{{mostrar.id}}')">
                                 <i class="bi bi-trash"></i> Eliminar
                             </button>
                         </div>
@@ -148,8 +148,8 @@
 </div>
 
 <!-- MODAL agregar un nuevo usuario -->
-<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="exampleModal" tabindex="-1" 
-     aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="exampleModal" tabindex="-1"
+    aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(220deg, #ffffff,#7a9f7a,#355e3b);">
@@ -159,18 +159,21 @@
             <div class="modal-body">
                 <form action="{{ url_for('guardar') }}" method="POST">
                     <div class="form-floating mb-3">
-                        <input type="text" class="form-control" name="nombre" id="name"
-                            aria-describedby="helpId" placeholder="Nombre Completo" required />
+                        <input type="text" class="form-control" name="nombre" id="name" aria-describedby="helpId"
+                            placeholder="Nombre Completo" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                            title="Ingrese su nombre completo" required />
                         <label for="nombre" class="form-label">Nombre Completo</label>
                     </div>
                     <div class="form-floating mb-3">
-                        <input type="email" class="form-control" name="email" id="email"
-                            aria-describedby="helpId" placeholder="Correo Electronico" required />
+                        <input type="email" class="form-control" name="email" id="email" aria-describedby="helpId"
+                            placeholder="Correo electronico" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                            title="Ingrese su correo electronico" required />
                         <label for="email" class="form-label">Correo Electronico</label>
                     </div>
                     <div class="form-floating mb-3">
-                        <input type="text" class="form-control" name="password" id="password"
-                            aria-describedby="helpId" placeholder="Contraseña" required />
+                        <input type="text" class="form-control" name="password" id="password" aria-describedby="helpId"
+                            placeholder="Contraseña" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                            title="Ingrese su contraseña" required />
                         <label for="password" class="form-label">Contraseña</label>
                     </div>
             </div>
@@ -188,26 +191,26 @@
         font-weight: 600;
         background-color: #d1e7dd !important;
     }
-    
+
     .btn-group .btn {
         border-radius: 5px;
         margin: 0 2px;
         font-size: 0.875rem;
     }
-    
+
     .table td {
         vertical-align: middle;
     }
-    
+
     .modal-header {
         border-bottom: 2px solid #355e3b;
     }
-    
+
     .btn-outline-success {
         border-color: #355e3b;
         color: #355e3b;
     }
-    
+
     .btn-outline-success:hover {
         background-color: #355e3b;
         color: white;

@@ -73,11 +73,19 @@
                                 <form action="{{ url_for('accesologin') }}" class="form-control" method="POST">
                                     <div class="form-outline mb-4">
                                         <input name="email" type="email" id="email" class="form-control form-control-lg"
-                                               placeholder="Ingresa tu correo electrónico" />
+                                               placeholder="Ingresa tu correo electrónico"
+                                               data-bs-toggle="tooltip"
+                                               data-bs-placement="bottom" 
+                                               title="Ingrese su correo"
+                                               required/>
                                     </div>
                                     <div class="form-outline mb-4">
                                         <input name="password" type="password" id="password" class="form-control form-control-lg"
-                                               placeholder="Ingresa tu contraseña" />
+                                               placeholder="Ingresa tu contraseña"
+                                               data-bs-toggle="tooltip"
+                                               data-bs-placement="bottom" 
+                                               title="Ingrese su contraseña"
+                                               required />
                                     </div>
 
                                     <!-- Botón Iniciar Sesión -->

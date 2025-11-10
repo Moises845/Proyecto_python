@@ -48,20 +48,23 @@
     }
 </script>
 <div class="container p-5 mt-3">
-    <h2 class=" text-center alert alert-danger py-4">Sistema de Gestión de Productos</h2>
+    <h2 class="text-center alert alert-danger py-4">Sistema de Gestión de Productos</h2>
     <div class="row">
         <div class="row text-center">
+            <!-- Tarjeta de Administrar Usuarios -->
             <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card" style="background: linear-gradient(180deg, #355e3b, #7a9f7a, #f1eeda);">
                     <div class="row g-0">
                         <div class="col-md-8">
                             <div class="card-body">
                                 <div class="card-body text-white">
-
                                     <h5 class="card-title">Administrar Usuarios</h5>
-                                    <!-- p class="card-text">Mostrar registro de usuarios</p> -->
-                                    <a href="{{ url_for('listar')}}" class="btn btn-outline-success">Ver
-                                        Detalles</a>
+                                    <div class="mb-2">
+                                        <span class="fs-6 text-white">
+                                            {{ cantidad_usuarios }} Usuarios
+                                        </span>
+                                    </div>
+                                    <a href="{{ url_for('listar')}}" class="btn btn-outline-success">Ver Detalles</a>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +75,8 @@
                     </div>
                 </div>
             </div>
-            <!-- Corregir los enlaces de productos: -->
+
+            <!-- Tarjeta de Registrar Productos -->
             <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card" style="background: linear-gradient(180deg, #042bf1,#367cd9,#ffffff);">
                     <div class="row g-0">
@@ -81,20 +85,21 @@
                                 <div class="card-body text-white">
                                     <h5 class="card-title">Registrar Productos</h5>
                                     <a href="{{ url_for('listar_productos_agregados') }}"
-                                        class="btn btn-outline-success">Ver
-                                        Detalles</a>
+                                        class="btn btn-outline-success">Ver Detalles</a>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 align-content-center">
                             <a href="{{ url_for('listar_productos_agregados') }}">
                                 <img src="{{ url_for('static', filename='agregar.png') }}"
-                                    class="img-fluid rounded-start" alt="..."></a>
+                                    class="img-fluid rounded-start" alt="...">
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Tarjeta de Visualizar Productos -->
             <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card" style="background: linear-gradient(180deg, #0b235c,#3d85a9,#e0f7ff);">
                     <div class="row g-0">
@@ -102,14 +107,19 @@
                             <div class="card-body">
                                 <div class="card-body text-white">
                                     <h5 class="card-title">Visualizar Productos</h5>
+                                    <div class="mb-2">
+                                        <span class="fs-6 text-white">
+                                            {{ cantidad_productos }} Productos
+                                        </span>
+                                    </div>
                                     <a href="{{ url_for('listar_productos') }}" class="btn btn-outline-success">Ver
                                         Detalles</a>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 align-content-center">
-                            <img src="{{ url_for('static', filename='lista.png') }}"
-                                class="img-fluid rounded-start" alt="...">
+                            <img src="{{ url_for('static', filename='lista.png') }}" class="img-fluid rounded-start"
+                                alt="...">
                         </div>
                     </div>
                 </div>

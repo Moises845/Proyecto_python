@@ -4,18 +4,19 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 
+from passlib.hash import pbkdf2_sha256
+
 app = Flask(__name__)
 app.secret_key = 'appsecretkey'
 
 mysql = MySQL()
 
-
 # Conexion a la DB
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = 'bq4zq3fgw7bcblup6voc-mysql.services.clever-cloud.com'
 app.config['MYSQL_PORT'] = 3306
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'ventas'
+app.config['MYSQL_USER'] = 'usuq5vcpx5moqqe3'
+app.config['MYSQL_PASSWORD'] = 'fC5KKbZWB3r6L7Q7Z5Ws'
+app.config['MYSQL_DB'] = 'bq4zq3fgw7bcblup6voc'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 # Configuración para subir archivos
@@ -32,6 +33,32 @@ def allowed_file(filename):
 
 mysql.init_app(app)
 
+# ----------------- FUNCIONES PARA CONTAR REGISTROS -----------------
+
+def contar_usuarios():
+    """Obtiene la cantidad total de usuarios"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT COUNT(*) as total FROM usuario")
+        resultado = cur.fetchone()
+        cur.close()
+        return resultado['total'] if resultado else 0
+    except Exception as e:
+        print(f"Error al contar usuarios: {e}")
+        return 0
+
+def contar_productos():
+    """Obtiene la cantidad total de productos"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT COUNT(*) as total FROM productos")
+        resultado = cur.fetchone()
+        cur.close()
+        return resultado['total'] if resultado else 0
+    except Exception as e:
+        print(f"Error al contar productos: {e}")
+        return 0
+
 # ----------------- RUTAS PRINCIPALES -----------------
 
 @app.route('/')
@@ -45,10 +72,10 @@ def accesologin():
         password = request.form['password']
         
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM usuario WHERE email = %s AND password = %s", (email, password))
+        cursor.execute("SELECT * FROM usuario WHERE email = %s", (email,))
         user = cursor.fetchone()
 
-        if user:
+        if user and pbkdf2_sha256.verify(password, user['password']):
             session['logueado'] = True
             session['id'] = user['id']
             session['nombre'] = user['nombre']
@@ -72,7 +99,7 @@ def registro():
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         email = request.form.get('email')
-        password = request.form.get('password')
+        password = pbkdf2_sha256.hash(request.form.get('password'))
         id_rol = 2
 
         cur = mysql.connection.cursor()
@@ -104,7 +131,7 @@ def guardar():
     if request.method == 'POST':
         nombre = request.form['nombre']
         email = request.form['email']
-        password = request.form['password']
+        password = pbkdf2_sha256.hash(request.form['password'])
         id_rol = 2
         
         cur = mysql.connection.cursor()
@@ -122,7 +149,7 @@ def updateUsuario():
         id = request.form['id']
         nombre = request.form['nombre']
         email = request.form['email']
-        password = request.form['password']
+        password = pbkdf2_sha256.hash(request.form['password'])
         
         cur = mysql.connection.cursor()
         cur.execute("""
@@ -300,10 +327,11 @@ def cambiar_password():
         cur.execute("SELECT password FROM usuario WHERE id = %s", (user_id,))
         user = cur.fetchone()
         
-        if user and user['password'] == password_actual:
+        if user and pbkdf2_sha256.verify(password_actual, user['password']):
             if nueva_password == confirmar_password:
+                hashed_password = pbkdf2_sha256.hash(nueva_password)
                 cur.execute("UPDATE usuario SET password = %s WHERE id = %s", 
-                           (nueva_password, user_id))
+                           (hashed_password, user_id))
                 mysql.connection.commit()
                 cur.close()
                 flash('Contraseña cambiada correctamente', 'success')
@@ -360,7 +388,14 @@ def login():
 @app.route('/admin')
 def admin():
     if 'logueado' in session and session.get('id_rol') == 1:
-        return render_template("admin.html", usuario=session['nombre'])
+        # Obtener las cantidades de usuarios y productos
+        cantidad_usuarios = contar_usuarios()
+        cantidad_productos = contar_productos()
+        
+        return render_template("admin.html", 
+                             usuario=session['nombre'],
+                             cantidad_usuarios=cantidad_usuarios,
+                             cantidad_productos=cantidad_productos)
     else:
         flash("Acceso no autorizado", "error")
         return redirect(url_for('login'))

@@ -90,16 +90,18 @@
                     <th scope="col" class="text-center">Nombre</th>
                     <th scope="col" class="text-center">Precio</th>
                     <th scope="col" class="text-center">Descripción</th>
+                    <th scope="col" class="text-center">Fecha de Registro</th>
                     <th scope="col" class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for producto in productos %}
                 <tr>
-                    <td class="text-center">{{ producto.id }}</td>
+                    <td class="text-center">{{ loop.index }}</td>
                     <td>{{ producto.Nombre }}</td>
                     <td class="text-center">${{ producto.Precio }}</td>
                     <td>{{ producto.Descripcion }}</td>
+                    <td class="text-center">{{ producto.fecha_Registro }}</td>
                     <td class="text-center">
                         <!-- Botones de acciones -->
                         <div class="btn-group" role="group">
