@@ -174,6 +174,26 @@ def borrarUser(id):
     return redirect(url_for('listar'))
 
 # ----------------- RUTAS DE PRODUCTOS -----------------
+@app.route('/agregar_producto_post', methods=['POST'])
+def agregar_producto_post():
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre']
+            precio = request.form['precio']
+            descripcion = request.form['descripcion']
+            
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO productos (Nombre, Precio, Descripcion) VALUES (%s, %s, %s)", 
+                       (nombre, float(precio), descripcion))
+            mysql.connection.commit()
+            cur.close()
+            
+            flash('Producto agregado correctamente', 'success')
+            return redirect(url_for('listar_productos'))
+            
+        except Exception as e:
+            flash(f'Error al agregar producto: {str(e)}', 'error')
+            return redirect(url_for('listar_productos'))
 
 @app.route('/listar_productos_agregados', methods=['GET', 'POST'])
 def listar_productos_agregados():
